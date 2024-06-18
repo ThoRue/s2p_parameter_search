@@ -4,54 +4,6 @@ import os
 import numpy as np
 from math import dist
 
-def compare_rois(output_ops, manual_rois, dist_thres=6):
-    """Compare automatically generated ROIs from suite2p with manually labeled ROIs
-    created in imagej
-
-    Args:
-        output_ops (dict): output parameters from suite2p
-        manual_rois (dict): set of manually labeled ROIs from imagej
-        dist_thres (int, optional): Threshold for maximal distance in pixels between ROI 
-                                    centers that is considered to suffice for matching. 
-                                    Defaults to 6.
-
-    Returns:
-        manual_rois_found (list): list of booleans indicating of manually labeled ROIs were present in s2p output
-        manual_roi_matches (list): list of integers indicating which s2p ROI was matched to each manually labeled ROI
-    """
-
-    # load stats and iscell categorization
-    stat = np.load(os.path.join(output_ops['save_path'], 'stat.npy'), allow_pickle=True)
-    iscell = np.load(os.path.join(output_ops['save_path'], 'iscell.npy'))
-
-    # compute centers
-    manual_centers = []
-    for manual_roi in manual_rois:
-        center = [np.mean([manual_roi.left, manual_roi.right]), 
-                  np.mean([manual_roi.top, manual_roi.bottom])]
-        manual_centers.append(center)
-
-    s2p_centers = []
-    for s2p_roi in stat:
-        center = [np.mean([np.min(s2p_roi['xpix']), np.max(s2p_roi['xpix'])]), 
-                  np.mean([np.min(s2p_roi['ypix']), np.max(s2p_roi['ypix'])])]
-        s2p_centers.append(center)
-
-    # compare centers by computing distance
-    manual_rois_found = []
-    manual_rois_matches = []
-    for manual_center in manual_centers:
-        all_dists = np.array([dist(manual_center, x) for x in s2p_centers])
-        corres_s2p_roi = np.arange(len(s2p_centers))[all_dists < dist_thres]
-        if len(corres_s2p_roi) > 0:
-            manual_rois_found.append(True)
-            manual_rois_matches.append(corres_s2p_roi[np.argmin(corres_s2p_roi)])
-        else:
-            manual_rois_found.append(False)
-            manual_rois_matches.append(np.nan)
-
-    return manual_rois_found, manual_rois_matches
-
 
 def setup():
     # suite2p input parameters
@@ -178,6 +130,7 @@ def setup():
 
     return ops, db, manual_rois
 
+
 def s2p_loop(ops, db, manual_rois):
     # running suite2p pipeline (should automatically detect existing .bin file)
     output_ops = suite2p.run_s2p(ops, 
@@ -186,9 +139,60 @@ def s2p_loop(ops, db, manual_rois):
     matches_bin, matches_roi = compare_rois(output_ops, manual_rois)
     return matches_bin, matches_roi
 
+
+def compare_rois(output_ops, manual_rois, dist_thres=6):
+    """Compare automatically generated ROIs from suite2p with manually labeled ROIs
+    created in imagej
+
+    Args:
+        output_ops (dict): output parameters from suite2p
+        manual_rois (dict): set of manually labeled ROIs from imagej
+        dist_thres (int, optional): Threshold for maximal distance in pixels between ROI 
+                                    centers that is considered to suffice for matching. 
+                                    Defaults to 6.
+
+    Returns:
+        manual_rois_found (list): list of booleans indicating of manually labeled ROIs were present in s2p output
+        manual_roi_matches (list): list of integers indicating which s2p ROI was matched to each manually labeled ROI
+    """
+
+    # load stats and iscell categorization
+    stat = np.load(os.path.join(output_ops['save_path'], 'stat.npy'), allow_pickle=True)
+    iscell = np.load(os.path.join(output_ops['save_path'], 'iscell.npy'))
+
+    # compute centers
+    manual_centers = []
+    for manual_roi in manual_rois:
+        center = [np.mean([manual_roi.left, manual_roi.right]), 
+                  np.mean([manual_roi.top, manual_roi.bottom])]
+        manual_centers.append(center)
+
+    s2p_centers = []
+    for s2p_roi in stat:
+        center = [np.mean([np.min(s2p_roi['xpix']), np.max(s2p_roi['xpix'])]), 
+                  np.mean([np.min(s2p_roi['ypix']), np.max(s2p_roi['ypix'])])]
+        s2p_centers.append(center)
+
+    # compare centers by computing distance
+    manual_rois_found = []
+    manual_rois_matches = []
+    for manual_center in manual_centers:
+        all_dists = np.array([dist(manual_center, x) for x in s2p_centers])
+        corres_s2p_roi = np.arange(len(s2p_centers))[all_dists < dist_thres]
+        if len(corres_s2p_roi) > 0:
+            manual_rois_found.append(True)
+            manual_rois_matches.append(corres_s2p_roi[np.argmin(corres_s2p_roi)])
+        else:
+            manual_rois_found.append(False)
+            manual_rois_matches.append(np.nan)
+
+    return manual_rois_found, manual_rois_matches
+
+
 def main():
     ops, db, manual_rois = setup()
     matches_bin, matches_roi = s2p_loop(ops, db, manual_rois)
+
 
 if __name__ == '__main__':
     main()
