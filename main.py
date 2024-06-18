@@ -50,7 +50,7 @@ def compare_rois(output_ops, manual_rois, dist_thres=6):
             manual_rois_found.append(False)
             manual_rois_matches.append(np.nan)
 
-    return manual_rois_found, manual_roi_matches
+    return manual_rois_found, manual_rois_matches
 
 
 def setup():
