@@ -170,7 +170,7 @@ def setup():
 
     # location of suite2p folder containing motion corrected .bin file
     db = {
-        'data_path' : [r"data\"]
+        'data_path' : [r"data\\"]
         }
 
     # load manually labeled rois
