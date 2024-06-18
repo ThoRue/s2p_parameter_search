@@ -176,7 +176,7 @@ def setup():
     # load manually labeled rois
     manual_rois = ImagejRoi.fromfile('manual_labels.zip')
 
-    return obs, db, manual_rois
+    return ops, db, manual_rois
 
 def s2p_loop(ops, db, manual_rois):
     # running suite2p pipeline (should automatically detect existing .bin file)
@@ -190,3 +190,5 @@ def main():
     ops, db, manual_rois = setup()
     matches_bin, matches_roi = s2p_loop(ops, db, manual_rois)
 
+if __name__ == '__main__':
+    main()
